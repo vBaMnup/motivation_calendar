@@ -1,6 +1,6 @@
-from random import choice
 from datetime import datetime
 from pathlib import Path
+from random import choice
 
 from PIL import Image
 
@@ -14,19 +14,18 @@ from settings.config import (
     coord_calendar_right,
     coord_phrase_center,
     coord_calendar_center,
-    winter,
-    summer
+    WINTER,
+    SUMMER,
+    IMG_QUALITY,
+    IMG_RESOLUTION
 )
-
-# Путь к текущему файлу
-# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 MONTH = datetime.today().month
 
 
 class CreateImage:
     def __init__(self):
-        self.calendar = Image.new('RGB', (1920, 1080))
+        self.calendar = Image.new('RGB', IMG_RESOLUTION)
         self.random_background = choice(
             list(Path(BACKGROUNDS_DIR + '/winter').glob('*.*'))
         )
@@ -34,9 +33,9 @@ class CreateImage:
         self.random_calendar = choice(list(Path(CALENDAR_DIR).glob('*.*')))
 
     def get_background(self):
-        if MONTH in winter:
+        if MONTH in WINTER:
             return Image.open(self.random_background)
-        if MONTH in summer:
+        if MONTH in SUMMER:
             return Image.open(self.random_background)
         return Image.open(self.random_background)
 
@@ -52,16 +51,23 @@ class CreateImage:
         self.calendar.paste(self.get_background())
         if 'left' in self.random_background.name:
             self.calendar.paste(phrase_img, coord_phrase_left, phrase_img)
-            self.calendar.paste(calendar_img, coord_calendar_left, calendar_img)
+            self.calendar.paste(
+                calendar_img, coord_calendar_left, calendar_img
+            )
         elif 'right' in self.random_background.name:
             self.calendar.paste(phrase_img, coord_phrase_right, phrase_img)
-            self.calendar.paste(calendar_img, coord_calendar_right, calendar_img)
+            self.calendar.paste(
+                calendar_img, coord_calendar_right, calendar_img
+            )
         else:
             self.calendar.paste(phrase_img, coord_phrase_center, phrase_img)
-            self.calendar.paste(calendar_img, coord_calendar_center, calendar_img)
+            self.calendar.paste(
+                calendar_img, coord_calendar_center, calendar_img
+            )
 
-        self.calendar.save('test.png', quality=100)
+        self.calendar.save('test.png', quality=IMG_QUALITY)
 
 
-a = CreateImage()
-a.make_wallpaper()
+if __name__ == '__main__':
+    a = CreateImage()
+    a.make_wallpaper()

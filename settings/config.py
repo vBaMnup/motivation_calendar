@@ -1,4 +1,10 @@
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Путь к текущему файлу
+# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # Директории
@@ -25,6 +31,9 @@ coord_phrase_right: tuple = (115, 655)
 coord_calendar_right: tuple = (90, 95)
 
 # Времена года
-winter: tuple = (1, 2, 12)
-summer: tuple = (6, 7, 8)
+WINTER: tuple = (1, 2, 12)
+SUMMER: tuple = (6, 7, 8)
 
+# Настройки создания картинок
+IMG_QUALITY: int = 100
+IMG_RESOLUTION: tuple = (1920, 1080)
