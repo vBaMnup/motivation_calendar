@@ -32,6 +32,7 @@ class CreateImage:
         self.random_phrase = choice(list(Path(PHRASE_DIR).glob('*.*')))
         self.random_calendar = choice(list(Path(CALENDAR_DIR).glob('*.*')))
 
+
     def get_background(self):
         if MONTH in WINTER:
             return Image.open(self.random_background)
@@ -45,7 +46,7 @@ class CreateImage:
     def get_calendar(self):
         return Image.open(self.random_calendar)
 
-    def make_wallpaper(self):
+    def make_wallpaper(self, tg_id, zodiac=None):
         phrase_img = self.get_phrase()
         calendar_img = self.get_calendar()
         self.calendar.paste(self.get_background())
@@ -65,7 +66,8 @@ class CreateImage:
                 calendar_img, coord_calendar_center, calendar_img
             )
 
-        self.calendar.save('test.png', quality=IMG_QUALITY)
+        self.calendar.save(f'{tg_id}-test.png', quality=IMG_QUALITY)
+        return f'{tg_id}-test.png'
 
 
 if __name__ == '__main__':

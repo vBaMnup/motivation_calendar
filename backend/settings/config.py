@@ -1,5 +1,6 @@
 from pathlib import Path
 from dotenv import load_dotenv
+from pymongo import MongoClient
 
 load_dotenv()
 
@@ -37,3 +38,6 @@ SUMMER: tuple = (6, 7, 8)
 # Настройки создания картинок
 IMG_QUALITY: int = 100
 IMG_RESOLUTION: tuple = (1920, 1080)
+
+# MongoDB
+MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
