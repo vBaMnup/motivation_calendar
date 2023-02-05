@@ -13,3 +13,7 @@ class User(BaseModel):
         schema_extra = {
             "required": ["tg_id", "username"]
         }
+
+
+class Zodiac(BaseModel):
+    zodiac: str

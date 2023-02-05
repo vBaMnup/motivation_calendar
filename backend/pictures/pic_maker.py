@@ -1,5 +1,6 @@
 from datetime import datetime
 from pathlib import Path
+import os
 from random import choice
 
 from PIL import Image
@@ -30,8 +31,7 @@ class CreateImage:
             list(Path(BACKGROUNDS_DIR + '/winter').glob('*.*'))
         )
         self.random_phrase = choice(list(Path(PHRASE_DIR).glob('*.*')))
-        self.random_calendar = choice(list(Path(CALENDAR_DIR).glob('*.*')))
-
+        self.random_calendar = choice(list(Path(CALENDAR_DIR).glob('*february*.*')))
 
     def get_background(self):
         if MONTH in WINTER:
@@ -66,10 +66,14 @@ class CreateImage:
                 calendar_img, coord_calendar_center, calendar_img
             )
 
-        self.calendar.save(f'{tg_id}-test.png', quality=IMG_QUALITY)
-        return f'{tg_id}-test.png'
+        wallpaper_path = os.path.abspath(f'img/{tg_id}.png')
+        self.calendar.save(
+            wallpaper_path,
+            quality=IMG_QUALITY
+        )
+        return wallpaper_path
 
 
 if __name__ == '__main__':
     a = CreateImage()
-    a.make_wallpaper()
+    a.make_wallpaper(1)

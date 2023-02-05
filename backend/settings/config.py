@@ -40,4 +40,4 @@ IMG_QUALITY: int = 100
 IMG_RESOLUTION: tuple = (1920, 1080)
 
 # MongoDB
-MONGO_CLIENT = MongoClient('mongodb://localhost:27017/')
+MONGO_CLIENT = MongoClient('mongodb://mongo_db:27017/')

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from pictures.pic_maker import CreateImage
 from .models import users
-from .schema import User
+from .schema import User, Zodiac
 
 img_router = APIRouter()
 
@@ -14,7 +15,7 @@ async def create_user(user: User):
     """
     if users.find_one({'tg_id': user.tg_id}):
         raise HTTPException(
-            status_code=400,
+            status_code=201,
             detail='Такой пользователь уже существует'
         )
     user_data = {
@@ -29,14 +30,12 @@ async def create_user(user: User):
 
 
 @img_router.put("/users/{tg_id}/zodiac")
-async def update_user_zodiac(tg_id: int, zodiac: str):
-    """
-    Обновление знака зодиака пользователя
-    """
-    result = users.update_one({"tg_id": tg_id}, {"$set": {"zodiac": zodiac}})
-    return {"result": "Zodiac updated"} if result.modified_count else {
-        "result": "User not found"
-    }
+async def update_user_zodiac(tg_id: int, zodiac: Zodiac):
+    result = users.update_one(
+        {"tg_id": tg_id}, {"$set": {"zodiac": zodiac.zodiac}}
+    )
+    return ({"result": "Zodiac updated"} if result.modified_count
+            else {"result": "User not found"})
 
 
 @img_router.put("/users/{tg_id}/is_subscriber")
@@ -77,6 +76,7 @@ async def get_calendar(tg_id: int):
     user_data = users.find_one({'tg_id': tg_id})
     if user_data is None:
         raise HTTPException(status_code=400, detail="Пользователь не найден")
+    ''' Пока неактивно
     if (user_data.get('count_request') > 0
             and not user_data.get('is_subscriber')):
         raise HTTPException(
@@ -84,12 +84,11 @@ async def get_calendar(tg_id: int):
             detail='Пользователь без активной подписки может делать только 1 '
                    'запрос в месяц'
         )
+    '''
 
     users.update_one({'tg_id': tg_id}, {'$inc': {'count_request': 1}})
 
-    return {
-        'file_link': CreateImage().make_wallpaper(
+    return FileResponse(CreateImage().make_wallpaper(
             tg_id,
             user_data.get('zodiac')
-        )
-    }
+        ), media_type='image/jpeg')

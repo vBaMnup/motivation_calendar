@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  mongo_db:
+    image: mongo:6.0.4-jammy
+    env_file:
+      - backend/settings/.env
+
+  web:
+    image: vbamnup/mcalendar_backend:v0.3
+    restart: always
+    ports:
+     - "8000:8000"
+    depends_on:
+      - mongo_db
+    env_file:
+      - backend/settings/.env
+
+
