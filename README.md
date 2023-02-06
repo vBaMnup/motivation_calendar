@@ -1,2 +1,30 @@
 # motivation_calendar
-A bot that generates a unique calendar with motivational phrases
+
+### Описание
+Сервис генерирует календари с мотивационными фразами, гороскопы и цитаты дня.
+Состоит из вдух частей:
+- Backend - API, база данных, генерирование изображение
+- ТГ-бот - обмен данными между пользователем и backend
+
+![Пример](https://github.com/vBaMnup/motivation_calendar/blob/e579b526e748c2d29dc43d3bf27904ac4353fa18/img/preview.jpg)
+
+### Возможности:
+
+- Регистрация пользователей ТГ в базе данных
+- Генерация календаря на текущий месяц со случайной мотивацией
+- Гороскоп на месяц (в разработке)
+- Цитата дня (в разработке)
+- Гороскоп на день (в разработке)
+- Платная подписка (в разработке)
+
+### Технологии
+
+- FastAPI
+- MongoDB
+- Pillow
+- Aiogram
+- Aiohttp
+- Docker
+
+### Автор
+[Paskov Andrey](https://vk.com/andrey_paskov)
