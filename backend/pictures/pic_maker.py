@@ -18,10 +18,20 @@ from settings.config import (
     WINTER,
     SUMMER,
     IMG_QUALITY,
-    IMG_RESOLUTION
+    IMG_RESOLUTION,
+    HOROSCOPE_IMG_DIR,
+    COORD_HOROSCOPE_CENTER,
+    COORD_HOROSCOPE_LEFT,
+    COORD_HOROSCOPE_RIGHT,
+    COORD_PHRASE_LEFT_WITH_HORO,
+    COORD_CALENDAR_LEFT_WITH_HORO,
+    COORD_CALENDAR_RIGHT_WITH_HORO,
+    COORD_PHRASE_RIGHT_WITH_HORO
 )
 
 MONTH = datetime.today().month
+MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july',
+          'august', 'september', 'october', 'november', 'december']
 
 
 class CreateImage:
@@ -31,7 +41,9 @@ class CreateImage:
             list(Path(BACKGROUNDS_DIR + '/winter').glob('*.*'))
         )
         self.random_phrase = choice(list(Path(PHRASE_DIR).glob('*.*')))
-        self.random_calendar = choice(list(Path(CALENDAR_DIR).glob('*february*.*')))
+        self.random_calendar = choice(list(Path(CALENDAR_DIR).glob(
+            f'*{MONTHS[MONTH - 1]}*.*'))
+        )
 
     def get_background(self):
         if MONTH in WINTER:
@@ -50,30 +62,52 @@ class CreateImage:
         phrase_img = self.get_phrase()
         calendar_img = self.get_calendar()
         self.calendar.paste(self.get_background())
-        if 'left' in self.random_background.name:
-            self.calendar.paste(phrase_img, coord_phrase_left, phrase_img)
-            self.calendar.paste(
-                calendar_img, coord_calendar_left, calendar_img
-            )
-        elif 'right' in self.random_background.name:
-            self.calendar.paste(phrase_img, coord_phrase_right, phrase_img)
-            self.calendar.paste(
-                calendar_img, coord_calendar_right, calendar_img
-            )
+
+        if zodiac:
+            zodiac_img = Image.open(f'{HOROSCOPE_IMG_DIR}{zodiac.lower()}.png')
+            if 'left' in self.random_background.name:
+                self.calendar.paste(phrase_img, COORD_PHRASE_LEFT_WITH_HORO,
+                                    phrase_img)
+                self.calendar.paste(calendar_img,
+                                    COORD_CALENDAR_LEFT_WITH_HORO,
+                                    calendar_img)
+                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_LEFT,
+                                    zodiac_img)
+            elif 'right' in self.random_background.name:
+                self.calendar.paste(phrase_img, COORD_PHRASE_RIGHT_WITH_HORO,
+                                    phrase_img)
+                self.calendar.paste(calendar_img,
+                                    COORD_CALENDAR_RIGHT_WITH_HORO,
+                                    calendar_img)
+                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_RIGHT,
+                                    zodiac_img)
+            else:
+                self.calendar.paste(phrase_img, coord_phrase_center,
+                                    phrase_img)
+                self.calendar.paste(calendar_img, coord_calendar_center,
+                                    calendar_img)
+                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_CENTER,
+                                    zodiac_img)
         else:
-            self.calendar.paste(phrase_img, coord_phrase_center, phrase_img)
-            self.calendar.paste(
-                calendar_img, coord_calendar_center, calendar_img
-            )
+            if 'left' in self.random_background.name:
+                self.calendar.paste(phrase_img, coord_phrase_left, phrase_img)
+                self.calendar.paste(calendar_img, coord_calendar_left,
+                                    calendar_img)
+            elif 'right' in self.random_background.name:
+                self.calendar.paste(phrase_img, coord_phrase_right, phrase_img)
+                self.calendar.paste(calendar_img, coord_calendar_right,
+                                    calendar_img)
+            else:
+                self.calendar.paste(phrase_img, coord_phrase_center,
+                                    phrase_img)
+                self.calendar.paste(calendar_img, coord_calendar_center,
+                                    calendar_img)
 
         wallpaper_path = os.path.abspath(f'img/{tg_id}.png')
-        self.calendar.save(
-            wallpaper_path,
-            quality=IMG_QUALITY
-        )
+        self.calendar.save(wallpaper_path, quality=IMG_QUALITY)
         return wallpaper_path
 
 
 if __name__ == '__main__':
     a = CreateImage()
-    a.make_wallpaper(1)
+    a.make_wallpaper(1, 'Скорпион')
