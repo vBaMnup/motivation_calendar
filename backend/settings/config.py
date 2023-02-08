@@ -21,6 +21,7 @@ PHRASE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'phrases'
 CALENDAR_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'calendars'
 MONTHLY_HOROSCOPE_DIR = ROOT_DIR + TEMPLATES_DIR + 'monthly-horoscope/'
 HOROSCOPE_IMG_DIR = ROOT_DIR + TEMPLATES_DIR + 'horoscope/'
+QUOTES_FILE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'quotes/quotes.txt'
 
 
 # Координаты для календаря и цитат

@@ -5,6 +5,7 @@ from pictures.pic_maker import CreateImage
 from .models import users
 from .schema import User, Zodiac
 from horoscope.horoscope_gen import get_horoscope
+from daily_motivation.motivation_quote_creater import get_random_quote
 
 img_router = APIRouter()
 
@@ -21,8 +22,11 @@ async def create_user(user: User):
         "tg_id": user.tg_id,
         "username": user.username,
         "zodiac": user.zodiac,
-        "count_request": 0,
-        "is_subscriber": False
+        'count_request_calendar': 0,
+        'count_request_horoscope': 0,
+        "is_subscriber": False,
+        'is_quote_subscribe': False,
+        'is_horoscope_subscribe': False
     }
     users.insert_one(user_data)
     return user
@@ -47,6 +51,40 @@ async def update_user_is_subscriber(tg_id: int, is_subscriber: bool):
     }})
     return ({"result": "Is subscriber request updated"}
             if result.modified_count else {"result": "User not found"})
+
+
+@img_router.put('/subscribe_to_quotes')
+async def subscribe_to_quotes(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if not user_data:
+        raise HTTPException(status_code=400,
+                            detail='Пользователь не найден')
+    if not user_data.get('is_subscriber'):
+        raise HTTPException(
+            status_code=400,
+            detail='Невозможно подписаться на ежедневную мотивацию, '
+                   'т.к. пользователь не является подписчиком'
+        )
+    users.update_one({'tg_id': tg_id},
+                     {'$set': {'is_quote_subscribe': True}})
+    return {
+        'message': 'Подписка на ежедневную мотивацию успешно оформлена'}
+
+
+@img_router.put('/unsubscribe_from_quotes')
+async def unsubscribe_from_quotes(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if not user_data:
+        raise HTTPException(status_code=400,
+                            detail='Пользователь не найден')
+    if not user_data.get('is_quote_subscribe'):
+        raise HTTPException(
+            status_code=400,
+            detail='Пользователь не подписан на ежедневную мотивацию'
+        )
+    users.update_one({'tg_id': tg_id},
+                     {'$set': {'is_quote_subscribe': False}})
+    return {'message': 'Отписка от ежедневной мотивации успешно выполнена'}
 
 
 @img_router.get("/users/")
@@ -93,13 +131,13 @@ async def get_calendar(tg_id: int, zodiac: Zodiac = None):
         )
     '''
 
-    users.update_one({'tg_id': tg_id}, {'$inc': {'count_request': 1}})
+    users.update_one({'tg_id': tg_id}, {'$inc': {'count_request_calendar': 1}})
 
     if zodiac:
         return FileResponse(CreateImage().make_wallpaper(
-                tg_id,
-                user_data.get('zodiac')
-            ), media_type='image/jpeg')
+            tg_id,
+            user_data.get('zodiac')
+        ), media_type='image/jpeg')
     return FileResponse(CreateImage().make_wallpaper(
         tg_id
     ), media_type='image/jpeg')
@@ -120,4 +158,22 @@ async def get_monthly_horoscope(tg_id: int):
         )
 
     result = await get_horoscope(user_zodiac)
+    users.update_one({'tg_id': tg_id}, {'$inc': {'count_request_horoscope': 1}})
     return result
+
+
+@img_router.post('/get_daily_motivation')
+async def get_daily_motivation(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if not user_data:
+        raise HTTPException(status_code=400, detail='Пользователь не найден')
+    if not user_data.get('is_subscriber') or not user_data.get(
+            'is_quote_subscribe'):
+        raise HTTPException(
+            status_code=400,
+            detail='Только подписчики с активной подпиской на цитаты могут '
+                   'получать ежедневную мотивацию'
+        )
+    return {
+        'quote': get_random_quote()
+    }
