@@ -1,11 +1,9 @@
 from pathlib import Path
+
 from dotenv import load_dotenv
 from pymongo import MongoClient
 
 load_dotenv()
-
-# Путь к текущему файлу
-# ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 # Директории

@@ -1,33 +1,21 @@
+import os
 from datetime import datetime
 from pathlib import Path
-import os
 from random import choice
 
 from PIL import Image
-
-from settings.config import (
-    BACKGROUNDS_DIR,
-    PHRASE_DIR,
-    CALENDAR_DIR,
-    coord_phrase_left,
-    coord_calendar_left,
-    coord_phrase_right,
-    coord_calendar_right,
-    coord_phrase_center,
-    coord_calendar_center,
-    WINTER,
-    SUMMER,
-    IMG_QUALITY,
-    IMG_RESOLUTION,
-    HOROSCOPE_IMG_DIR,
-    COORD_HOROSCOPE_CENTER,
-    COORD_HOROSCOPE_LEFT,
-    COORD_HOROSCOPE_RIGHT,
-    COORD_PHRASE_LEFT_WITH_HORO,
-    COORD_CALENDAR_LEFT_WITH_HORO,
-    COORD_CALENDAR_RIGHT_WITH_HORO,
-    COORD_PHRASE_RIGHT_WITH_HORO
-)
+from settings.config import (BACKGROUNDS_DIR, CALENDAR_DIR,
+                             COORD_CALENDAR_LEFT_WITH_HORO,
+                             COORD_CALENDAR_RIGHT_WITH_HORO,
+                             COORD_HOROSCOPE_CENTER, COORD_HOROSCOPE_LEFT,
+                             COORD_HOROSCOPE_RIGHT,
+                             COORD_PHRASE_LEFT_WITH_HORO,
+                             COORD_PHRASE_RIGHT_WITH_HORO, HOROSCOPE_IMG_DIR,
+                             IMG_QUALITY, IMG_RESOLUTION, PHRASE_DIR, SUMMER,
+                             WINTER, coord_calendar_center,
+                             coord_calendar_left, coord_calendar_right,
+                             coord_phrase_center, coord_phrase_left,
+                             coord_phrase_right)
 
 MONTH = datetime.today().month
 MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july',

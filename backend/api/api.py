@@ -1,11 +1,11 @@
+from daily_motivation.motivation_quote_creater import get_random_quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-
+from horoscope.horoscope_gen import get_horoscope
 from pictures.pic_maker import CreateImage
+
 from .models import users
 from .schema import User, Zodiac
-from horoscope.horoscope_gen import get_horoscope
-from daily_motivation.motivation_quote_creater import get_random_quote
 
 img_router = APIRouter()
 
@@ -96,6 +96,22 @@ async def get_all_users():
     return {"users": all_users}
 
 
+@img_router.get('/get_all_subscriber')
+async def get_all_subscriber():
+    quote_subscribers = list(user.get('tg_id') for user in users.find(
+        {'is_subscriber': True, 'is_quote_subscribe': True},
+        {"_id": 0}
+    ))
+    horoscope_subscribers = list(user.get('tg_id') for user in users.find(
+        {'is_subscriber': True, 'is_horoscope_subscribe': True},
+        {"_id": 0}
+    ))
+    return {
+        'quote_subscribers': quote_subscribers,
+        'horoscope_subscribers': horoscope_subscribers
+    }
+
+
 @img_router.get("/users/{tg_id}")
 async def get_user(tg_id: int):
     user_data = users.find_one({'tg_id': tg_id}, {"_id": 0})
@@ -157,9 +173,9 @@ async def get_monthly_horoscope(tg_id: int):
             status_code=400, detail='Не заполнен знак зодиака'
         )
 
-    result = await get_horoscope(user_zodiac)
-    users.update_one({'tg_id': tg_id}, {'$inc': {'count_request_horoscope': 1}})
-    return result
+    users.update_one({'tg_id': tg_id},
+                     {'$inc': {'count_request_horoscope': 1}})
+    return await get_horoscope(user_zodiac)
 
 
 @img_router.post('/get_daily_motivation')
@@ -175,5 +191,5 @@ async def get_daily_motivation(tg_id: int):
                    'получать ежедневную мотивацию'
         )
     return {
-        'quote': get_random_quote()
+        'quote': await get_random_quote()
     }

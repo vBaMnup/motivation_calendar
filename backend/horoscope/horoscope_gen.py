@@ -1,7 +1,7 @@
-import json
 import asyncio
-from pprint import pprint
+import json
 from datetime import datetime
+from pprint import pprint
 
 from settings.config import MONTHLY_HOROSCOPE_DIR
 
@@ -14,8 +14,7 @@ async def get_horoscope(sign):
 
     if sign in zodiac_info:
         return dict(zodiac_info[sign])
-    else:
-        return "Знак не найден в базе."
+    return "Знак не найден в базе."
 
 
 async def main():

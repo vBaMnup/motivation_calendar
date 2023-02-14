@@ -3,6 +3,9 @@ version: '3.8'
 services:
   mongo_db:
     image: mongo:6.0.4-jammy
+    restart: always
+    volumes:
+      - ./db:/data/db
     env_file:
       - backend/settings/.env
 
@@ -11,9 +14,18 @@ services:
     restart: always
     ports:
      - "8000:8000"
+    volumes:
+      - ./img:/img
+      - ./templates:/templates
     depends_on:
       - mongo_db
     env_file:
       - backend/settings/.env
 
-
+  # redis:
+  #   image: redis:alpine3.17
+  #   restart: always
+  #   ports:
+  #    - "6379:6379"
+  #   depends_on:
+  #     - web

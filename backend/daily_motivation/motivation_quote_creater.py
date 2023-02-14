@@ -11,14 +11,13 @@ async def get_random_quote():
                 if random.randrange(num):
                     continue
                 line = quote
-            return line
+            return line.strip()
     except StopIteration:
-        return
+        return None
 
 
 async def main():
-    quote = await get_random_quote()
-    print(quote)
+    await get_random_quote()
 
 
 if __name__ == '__main__':
