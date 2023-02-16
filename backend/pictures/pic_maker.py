@@ -12,7 +12,7 @@ from settings.config import (BACKGROUNDS_DIR, CALENDAR_DIR,
                              COORD_PHRASE_LEFT_WITH_HORO,
                              COORD_PHRASE_RIGHT_WITH_HORO, HOROSCOPE_IMG_DIR,
                              IMG_QUALITY, IMG_RESOLUTION, PHRASE_DIR, SUMMER,
-                             WINTER, coord_calendar_center,
+                             WINTER, ZODIAC_SINGS, coord_calendar_center,
                              coord_calendar_left, coord_calendar_right,
                              coord_phrase_center, coord_phrase_left,
                              coord_phrase_right)
@@ -46,13 +46,14 @@ class CreateImage:
     def get_calendar(self):
         return Image.open(self.random_calendar)
 
-    def make_wallpaper(self, tg_id, zodiac=None):
+    def make_wallpaper(self, tg_id, input_zodiac=None):
         phrase_img = self.get_phrase()
         calendar_img = self.get_calendar()
         self.calendar.paste(self.get_background())
 
-        if zodiac:
-            zodiac_img = Image.open(f'{HOROSCOPE_IMG_DIR}{zodiac.lower()}.png')
+        if input_zodiac:
+            zodiac = ZODIAC_SINGS[input_zodiac].lower()
+            zodiac_img = Image.open(f'{HOROSCOPE_IMG_DIR}{zodiac}.png')
             if 'left' in self.random_background.name:
                 self.calendar.paste(phrase_img, COORD_PHRASE_LEFT_WITH_HORO,
                                     phrase_img)

@@ -8,18 +8,13 @@ from aiogram import executor, types
 from aiohttp import ClientSession
 from config import bot, dp
 from services.buttons import (create_start_button, create_welcome_message,
-                              subscribe_menu)
+                              create_zodiac_buttons, subscribe_menu)
 from services.other import get_all_subscriber, get_user_data
 
 API_TOKEN = config.BOT_API_KEY
 CREATE_USER_URL = config.API_DOMEN + config.USER_CREATE_API
 GET_CALENDAR_URL = config.API_DOMEN + config.CREATE_CALENDAR_API
 GET_MONTHLY_HOROSCOPE = config.API_DOMEN + config.MONTHLY_HOROSCOPE_API
-
-ZODIAC_SINGS = [
-    'Овен', 'Телец', 'Близнецы', 'Рак', 'Лев', 'Дева', 'Весы', 'Скорпион',
-    'Стрелец', 'Козерог', 'Водолей', 'Рыбы'
-]
 
 logging.basicConfig(level=logging.INFO)
 
@@ -47,19 +42,10 @@ async def cmd_start(message: types.Message):
 
 @dp.message_handler(lambda message: message.text == 'Знак зодиака')
 async def get_zodiac_buttons(message: types.Message):
-    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-
-    for sign in ZODIAC_SINGS:
-        markup.add(types.KeyboardButton(sign))
-
-    await bot.send_message(
-        chat_id=message.chat.id,
-        text='Пожалуйста, выберите знак зодиака:',
-        reply_markup=markup
-    )
+    await create_zodiac_buttons(message)
 
 
-@dp.message_handler(lambda message: message.text in ZODIAC_SINGS)
+@dp.message_handler(lambda message: message.text in config.ZODIAC_SINGS)
 async def add_user_zodiac(message: types.Message):
     tg_id = message.from_user.id
     sign = message.text
@@ -67,7 +53,7 @@ async def add_user_zodiac(message: types.Message):
     add_zodiac_url = CREATE_USER_URL + f'{tg_id}/zodiac/'
 
     data = {
-        "zodiac": sign
+        "zodiac": config.ZODIAC_SINGS[sign]
     }
 
     async with ClientSession() as session:
@@ -101,6 +87,7 @@ async def create_calendar(message: types.Message):
                 await bot.send_photo(chat_id=message.chat.id, photo=file)
             else:
                 logging.error(f'Ошибка создания календаря для {username}')
+                await create_start_button(message)
 
 
 @dp.message_handler(lambda message: message.text == 'Создать календарь')
@@ -117,6 +104,7 @@ async def create_calendar(message: types.Message):
                 file = await response.read()
                 await bot.send_photo(chat_id=message.chat.id, photo=file)
             else:
+                await create_start_button(message)
                 logging.error(f'Ошибка создания календаря для {username}')
 
 
@@ -156,13 +144,8 @@ async def subscribe(message: types.Message):
                 logging.error(f'Ошибка подписки пользователя {name}')
         data = await get_user_data(message, session)
 
-    if data.get('is_subscriber'):
-        sub_motivation_text = 'Отписаться от мотивации' if data.get(
-            'is_quote_subscribe') else 'Подписаться на мотивацию'
-        sub_horoscope_text = 'Отписаться от гороскопа' if data.get(
-            'is_horoscope_subscribe') else 'Подписаться на гороскоп'
-
-    await subscribe_menu(message, sub_motivation_text, sub_horoscope_text)
+    await subscribe_menu(message, data['is_quote_subscribe'],
+                         data['is_horoscope_subscribe'])
 
 
 @dp.message_handler(lambda message: message.text == 'Назад')
@@ -189,14 +172,96 @@ async def subscribe_to_quotes(message: types.Message):
                 logging.info(
                     f'Пользователь {username} подписался на ежедневную '
                     f'мотивацию.')
-                await send_daily_motivation(bot, tg_id)
+                data = await get_user_data(message, session)
+                await subscribe_menu(message, data['is_quote_subscribe'],
+                                     data['is_horoscope_subscribe'],
+                                     'Вы подписались на ежедневную мотивацию')
+                await send_daily_motivation(tg_id)
             else:
                 logging.error(f'Ошибка подписки пользователя {username}')
 
 
-# @dp.message_handler(
-# lambda message: message.text == 'Подписаться на гороскоп')
-async def send_daily_motivation(bot, tg_id):
+@dp.message_handler(lambda message: message.text == 'Отписаться от мотивации')
+async def unsubscribe_from_quotes(message: types.Message):
+    tg_id = message.from_user.id
+    username = message.from_user.username
+    subscribe_quotes_url = (
+        f'{config.API_DOMEN}{config.UNSUBSCRIBE_QUOTES_API}{tg_id}'
+    )
+    async with ClientSession() as session:
+        data = await get_user_data(message, session)
+        async with session.put(subscribe_quotes_url) as response:
+            if response.status == 200:
+                logging.info(
+                    f'Пользователь {username} отписался от ежедневной '
+                    f'мотивации.')
+                await subscribe_menu(
+                    message,
+                    data['is_quote_subscribe'],
+                    data['is_horoscope_subscribe'],
+                    'Вы отписались от ежедневной мотивации'
+                )
+            else:
+                logging.error(f'Ошибка отписки пользователя {username}')
+
+
+@dp.message_handler(lambda message: message.text == 'Подписаться на гороскоп')
+async def subscribe_to_horoscope(message: types.Message):
+    tg_id = message.from_user.id
+    username = message.from_user.username
+    subscribe_horoscope_url = (
+        f'{config.API_DOMEN}{config.SUBSCRIBE_HOROSCOPE_API}?tg_id={tg_id}'
+    )
+    async with ClientSession() as session:
+        data = await get_user_data(message, session)
+        if not data['zodiac']:
+            await create_welcome_message(
+                message,
+                'Ошибка, укажите свой знак зодиака и попробуйте снова'
+            )
+        else:
+            async with session.put(subscribe_horoscope_url) as response:
+                if response.status == 200:
+                    logging.info(
+                        f'Пользователь {username} подписался на ежедневный '
+                        f'гороскоп.')
+                    data = await get_user_data(message, session)
+                    await subscribe_menu(
+                        message, data['is_quote_subscribe'],
+                        data['is_horoscope_subscribe'],
+                        'Вы подписались на ежедневный гороскоп'
+                    )
+                    await send_daily_horoscope(tg_id)
+                else:
+                    logging.error(f'Ошибка подписки пользователя {username}')
+
+
+@dp.message_handler(lambda message: message.text == 'Отписаться от гороскопа')
+async def unsubscribe_from_horoscope(message: types.Message):
+    tg_id = message.from_user.id
+    username = message.from_user.username
+    subscribe_quotes_url = (
+        f'{config.API_DOMEN}{config.UNSUBSCRIBE_HOROSCOPE_API}{tg_id}'
+    )
+    async with ClientSession() as session:
+        async with session.put(subscribe_quotes_url) as response:
+            if response.status == 200:
+                logging.info(
+                    f'Пользователь {username} отписался от '
+                    f'ежедневного '
+                    f'гороскопа.')
+                data = await get_user_data(message, session)
+                await subscribe_menu(message,
+                                     data['is_quote_subscribe'],
+                                     data['is_horoscope_subscribe'],
+                                     'Вы отписались от ежедневного '
+                                     'гороскопа')
+            else:
+                logging.error(
+                    f'Ошибка отписки пользователя {username}')
+
+
+async def send_daily_motivation(tg_id):
     get_motivation_url = (
         f'{config.API_DOMEN}{config.GET_DAILY_QUOTES_API}{tg_id}'
     )
@@ -213,6 +278,26 @@ async def send_daily_motivation(bot, tg_id):
                            text=f'Мотивация на сегодня:\n{quote}')
 
 
+async def send_daily_horoscope(tg_id):
+    get_horoscope_url = (
+        f'{config.API_DOMEN}{config.GET_DAILY_HOROSCOPE_API}{tg_id}'
+    )
+    async with ClientSession() as session:
+        async with session.post(get_horoscope_url) as response:
+            if response.status == 200:
+                data = await response.json()
+                horoscope = data.get('horoscope')
+                logging.info('Ежедневный гороскоп получен')
+            else:
+                logging.error('Ошибка получения гороскопа')
+
+    await bot.send_message(
+        chat_id=tg_id,
+        text=(f'Гороскоп на '
+              f'{datetime.datetime.today().strftime("%d.%m")}:\n{horoscope}')
+    )
+
+
 async def scheduled():
     while True:
         now = datetime.datetime.now()
@@ -220,10 +305,13 @@ async def scheduled():
         async with ClientSession() as session:
             data = await get_all_subscriber(session)
             motivation_subscribes = data.get('quote_subscribers')
+            horoscope_subscribers = data.get('horoscope_subscribers')
 
         if now.hour == 6:
             for user in motivation_subscribes:
-                await send_daily_motivation(bot, user)
+                await send_daily_motivation(user)
+            for user in horoscope_subscribers:
+                await send_daily_horoscope(user)
 
         await aioschedule.run_pending()
         await asyncio.sleep(3600)

@@ -1,6 +1,6 @@
 import config
 from aiogram import types
-from config import bot
+from config import ZODIAC_SINGS, bot
 
 
 async def create_start_button(message: types.Message):
@@ -12,6 +12,19 @@ async def create_start_button(message: types.Message):
                 [types.KeyboardButton(text="/start")]
             ]
         )
+    )
+
+
+async def create_zodiac_buttons(message: types.Message):
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
+
+    for en_sign in ZODIAC_SINGS.keys():
+        markup.add(types.KeyboardButton(en_sign))
+
+    await bot.send_message(
+        chat_id=message.chat.id,
+        text='Пожалуйста, выберите знак зодиака:',
+        reply_markup=markup
     )
 
 
@@ -37,14 +50,19 @@ async def create_welcome_message(message: types.Message,
     )
 
 
-async def subscribe_menu(message: types.Message, sub_motivation_text,
-                         sub_horoscope_text):
+async def subscribe_menu(message: types.Message, sub_motivation_data,
+                         sub_horoscope_data, text=config.SUBSCRIBER_TEXT):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True, selective=True)
-    markup.add(sub_motivation_text, sub_horoscope_text)
+    sub_quote_text = {
+        False: 'Подписаться на мотивацию',
+        True: 'Отписаться от мотивации'
+    }
+    sub_horo_text = {
+        False: 'Подписаться на гороскоп',
+        True: 'Отписаться от гороскопа'
+    }
+    markup.add(sub_quote_text[sub_motivation_data],
+               sub_horo_text[sub_horoscope_data])
     markup.add('Назад')
-    await bot.send_message(
-        chat_id=message.chat.id,
-        text='Вы подписчик! Теперь вы можете подписаться на ежедневные '
-             'мотивации и гороскоп!',
-        reply_markup=markup
-    )
+    await bot.send_message(chat_id=message.chat.id, text=text,
+                           reply_markup=markup)

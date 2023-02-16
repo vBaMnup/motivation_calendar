@@ -1,7 +1,7 @@
 from daily_motivation.motivation_quote_creater import get_random_quote
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from horoscope.horoscope_gen import get_horoscope
+from horoscope.horoscope_gen import get_horoscope, get_today_horoscope
 from pictures.pic_maker import CreateImage
 
 from .models import users
@@ -85,6 +85,40 @@ async def unsubscribe_from_quotes(tg_id: int):
     users.update_one({'tg_id': tg_id},
                      {'$set': {'is_quote_subscribe': False}})
     return {'message': 'Отписка от ежедневной мотивации успешно выполнена'}
+
+
+@img_router.put('/subscribe_to_horoscope')
+async def subscribe_to_horoscope(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if not user_data:
+        raise HTTPException(status_code=400,
+                            detail='Пользователь не найден')
+    if not user_data.get('is_subscriber'):
+        raise HTTPException(
+            status_code=400,
+            detail='Невозможно подписаться на ежедневный гороскоп, '
+                   'т.к. пользователь не является подписчиком'
+        )
+    users.update_one({'tg_id': tg_id},
+                     {'$set': {'is_horoscope_subscribe': True}})
+    return {
+        'message': 'Подписка на ежедневный гороскоп успешно оформлена'}
+
+
+@img_router.put('/unsubscribe_from_horoscope')
+async def unsubscribe_from_horoscope(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if not user_data:
+        raise HTTPException(status_code=400,
+                            detail='Пользователь не найден')
+    if not user_data.get('is_horoscope_subscribe'):
+        raise HTTPException(
+            status_code=400,
+            detail='Пользователь не подписан на ежедневный гороскоп'
+        )
+    users.update_one({'tg_id': tg_id},
+                     {'$set': {'is_horoscope_subscribe': False}})
+    return {'message': 'Отписка от ежедневного гороскопа успешно выполнена'}
 
 
 @img_router.get("/users/")
@@ -192,4 +226,27 @@ async def get_daily_motivation(tg_id: int):
         )
     return {
         'quote': await get_random_quote()
+    }
+
+
+@img_router.post('/get_daily_horoscope')
+async def get_daily_horoscope(tg_id: int):
+    user_data = users.find_one({'tg_id': tg_id})
+    if user_data is None:
+        raise HTTPException(status_code=400, detail='Пользователь не найден')
+    if not user_data.get('is_subscriber') or not user_data.get(
+            'is_horoscope_subscribe'):
+        raise HTTPException(
+            status_code=400,
+            detail='Только подписчики с активной подпиской на гороскоп могут '
+                   'получать ежедневную мотивацию'
+        )
+    zodiac = user_data.get('zodiac')
+    if not zodiac:
+        raise HTTPException(
+            status_code=400,
+            detail='Укажите знак зодиака'
+        )
+    return {
+        'horoscope': await get_today_horoscope(zodiac)
     }

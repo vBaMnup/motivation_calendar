@@ -20,6 +20,7 @@ CALENDAR_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'calendars'
 MONTHLY_HOROSCOPE_DIR = ROOT_DIR + TEMPLATES_DIR + 'monthly-horoscope/'
 HOROSCOPE_IMG_DIR = ROOT_DIR + TEMPLATES_DIR + 'horoscope/'
 QUOTES_FILE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'quotes/quotes.txt'
+DAILY_HOROSCOPE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'daily_horoscope/'
 
 
 # Координаты для календаря и цитат
@@ -50,3 +51,20 @@ IMG_RESOLUTION: tuple = (1920, 1080)
 # MongoDB
 # MONGO_CLIENT = MongoClient('mongodb://127.0.0.1:27017/')
 MONGO_CLIENT = MongoClient('mongodb://mongo_db:27017/')  # server
+
+
+# Знаки зодиака
+ZODIAC_SINGS = {
+    "aries": "Овен",
+    "taurus": "Телец",
+    "gemini": "Близнецы",
+    "cancer": "Рак",
+    "leo": "Лев",
+    "virgo": "Дева",
+    "libra": "Весы",
+    "scorpio": "Скорпион",
+    "sagittarius": "Стрелец",
+    "capricorn": "Козерог",
+    "aquarius": "Водолей",
+    "pisces": "Рыбы"
+}
