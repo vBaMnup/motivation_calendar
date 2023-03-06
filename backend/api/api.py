@@ -184,11 +184,11 @@ async def get_calendar(tg_id: int, zodiac: Zodiac = None):
     users.update_one({'tg_id': tg_id}, {'$inc': {'count_request_calendar': 1}})
 
     if zodiac:
-        return FileResponse(CreateImage().make_wallpaper(
+        return FileResponse(CreateImage().make_wallpaper_v2(
             tg_id,
             user_data.get('zodiac')
         ), media_type='image/jpeg')
-    return FileResponse(CreateImage().make_wallpaper(
+    return FileResponse(CreateImage().make_wallpaper_v2(
         tg_id
     ), media_type='image/jpeg')
 
