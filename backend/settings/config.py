@@ -20,32 +20,33 @@ CALENDAR_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'calendars'
 MONTHLY_HOROSCOPE_DIR = ROOT_DIR + TEMPLATES_DIR + 'monthly-horoscope/'
 HOROSCOPE_IMG_DIR = ROOT_DIR + TEMPLATES_DIR + 'horoscope/'
 QUOTES_FILE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'quotes/quotes.txt'
+FONTS_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'fonts/'
 DAILY_HOROSCOPE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'daily_horoscope/'
 
 
 # Координаты для календаря и цитат
-coord_phrase_center: tuple = (80, 350)
-coord_calendar_center: tuple = (1030, 175)
-COORD_HOROSCOPE_CENTER: tuple = (558, 800)
+COORD_PHRASE_CENTER: tuple = (0, 350)
+COORD_CALENDAR_CENTER: tuple = (1030, 175)
+COORD_HOROSCOPE_CENTER: tuple = (553, 800)
 
-coord_phrase_left: tuple = (1050, 650)
-coord_calendar_left: tuple = (1015, 100)
-COORD_HOROSCOPE_LEFT: tuple = (1050, 790)
-COORD_CALENDAR_LEFT_WITH_HORO = (1050, 45)
-COORD_PHRASE_LEFT_WITH_HORO: tuple = (1065, 590)
+COORD_PHRASE_LEFT: tuple = (900, 650)
+COORD_CALENDAR_LEFT: tuple = (1015, 100)
+COORD_HOROSCOPE_LEFT: tuple = (1005, 790)
+COORD_CALENDAR_LEFT_WITH_HORO = (1020, 45)
+COORD_PHRASE_LEFT_WITH_HORO: tuple = (0, 590)
 
-coord_phrase_right: tuple = (115, 655)
-coord_calendar_right: tuple = (90, 95)
-COORD_CALENDAR_RIGHT_WITH_HORO = (100, 45)
-COORD_HOROSCOPE_RIGHT: tuple = (100, 790)
-COORD_PHRASE_RIGHT_WITH_HORO: tuple = (115, 590)
+COORD_PHRASE_RIGHT: tuple = (80, 655)
+COORD_CALENDAR_RIGHT: tuple = (90, 95)
+COORD_CALENDAR_RIGHT_WITH_HORO = (60, 45)
+COORD_HOROSCOPE_RIGHT: tuple = (45, 790)
+COORD_PHRASE_RIGHT_WITH_HORO: tuple = (0, 590)
 
 # Времена года
 WINTER: tuple = (1, 2, 12)
 SUMMER: tuple = (6, 7, 8)
 
 # Настройки создания картинок
-IMG_QUALITY: int = 100
+IMG_QUALITY: int = 90
 IMG_RESOLUTION: tuple = (1920, 1080)
 
 # MongoDB
