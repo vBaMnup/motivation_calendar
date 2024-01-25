@@ -13,9 +13,7 @@ class User(BaseModel):
 
     class Config:
         arm_mode = True
-        schema_extra = {
-            "required": ["tg_id", "username"]
-        }
+        schema_extra = {"required": ["tg_id", "username"]}
 
 
 class Zodiac(BaseModel):

@@ -12,16 +12,16 @@ def get_project_root() -> Path:
 
 
 ROOT_DIR: str = str(get_project_root())
-TEMPLATES_DIR: str = '/templates/'
+TEMPLATES_DIR: str = "/templates/"
 
-BACKGROUNDS_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'backgrounds'
-PHRASE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'phrases'
-CALENDAR_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'calendars'
-MONTHLY_HOROSCOPE_DIR = ROOT_DIR + TEMPLATES_DIR + 'monthly-horoscope/'
-HOROSCOPE_IMG_DIR = ROOT_DIR + TEMPLATES_DIR + 'horoscope/'
-QUOTES_FILE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'quotes/quotes.txt'
-FONTS_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'fonts/'
-DAILY_HOROSCOPE_DIR: str = ROOT_DIR + TEMPLATES_DIR + 'daily_horoscope/'
+BACKGROUNDS_DIR: str = ROOT_DIR + TEMPLATES_DIR + "backgrounds"
+PHRASE_DIR: str = ROOT_DIR + TEMPLATES_DIR + "phrases"
+CALENDAR_DIR: str = ROOT_DIR + TEMPLATES_DIR + "calendars"
+MONTHLY_HOROSCOPE_DIR = ROOT_DIR + TEMPLATES_DIR + "monthly-horoscope/"
+HOROSCOPE_IMG_DIR = ROOT_DIR + TEMPLATES_DIR + "horoscope/"
+QUOTES_FILE_DIR: str = ROOT_DIR + TEMPLATES_DIR + "quotes/quotes.txt"
+FONTS_DIR: str = ROOT_DIR + TEMPLATES_DIR + "fonts/"
+DAILY_HOROSCOPE_DIR: str = ROOT_DIR + TEMPLATES_DIR + "daily_horoscope/"
 
 
 # Координаты для календаря и цитат
@@ -50,8 +50,8 @@ IMG_QUALITY: int = 90
 IMG_RESOLUTION: tuple = (1920, 1080)
 
 # MongoDB
-# MONGO_CLIENT = MongoClient('mongodb://127.0.0.1:27017/')
-MONGO_CLIENT = MongoClient('mongodb://mongo_db:27017/')  # server
+MONGO_CLIENT = MongoClient("mongodb://127.0.0.1:27017/")
+# MONGO_CLIENT = MongoClient('mongodb://mongo_db:27017/')  # server
 
 
 # Знаки зодиака
@@ -67,5 +67,5 @@ ZODIAC_SINGS = {
     "sagittarius": "Стрелец",
     "capricorn": "Козерог",
     "aquarius": "Водолей",
-    "pisces": "Рыбы"
+    "pisces": "Рыбы",
 }
