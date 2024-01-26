@@ -34,7 +34,9 @@ async def create_user(user: User):
 
 @img_router.put("/users/{tg_id}/zodiac")
 async def update_user_zodiac(tg_id: int, zodiac: Zodiac):
-    result = users.update_one({"tg_id": tg_id}, {"$set": {"zodiac": zodiac.zodiac}}, upsert=False)
+    result = users.update_one(
+        {"tg_id": tg_id}, {"$set": {"zodiac": zodiac.zodiac}}, upsert=False
+    )
     if result.matched_count > 0:
         return {"result": "Zodiac updated"}
     else:

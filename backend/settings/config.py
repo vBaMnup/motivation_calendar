@@ -51,7 +51,7 @@ IMG_RESOLUTION: tuple = (1920, 1080)
 
 # MongoDB
 # MONGO_CLIENT = MongoClient("mongodb://127.0.0.1:27017/")
-MONGO_CLIENT = MongoClient('mongodb://mongo_db:27017/')  # server
+MONGO_CLIENT = MongoClient("mongodb://mongo_db:27017/")  # server
 
 
 # Знаки зодиака

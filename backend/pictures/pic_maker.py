@@ -79,7 +79,11 @@ COORDS = {
 class CreateImage:
     def __init__(self):
         self.calendar = Image.new("RGB", IMG_RESOLUTION)
-        self.random_background = random.choice(list(Path(BACKGROUNDS_DIR + "/winter").glob("*.*")) if MONTH in WINTER else list(Path(BACKGROUNDS_DIR).glob("*.*")))
+        self.random_background = random.choice(
+            list(Path(BACKGROUNDS_DIR + "/winter").glob("*.*"))
+            if MONTH in WINTER
+            else list(Path(BACKGROUNDS_DIR).glob("*.*"))
+        )
         self.random_phrase = random.choice(list(Path(PHRASE_DIR).glob("*.*")))
         self.random_calendar = random.choice(
             list(Path(CALENDAR_DIR).glob(f"*{MONTHS[MONTH - 1]}*.*"))
