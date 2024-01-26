@@ -1,5 +1,6 @@
 import os
 import random
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import List
@@ -26,7 +27,6 @@ from settings.config import (
     IMG_RESOLUTION,
     PHRASE_DIR,
     WINTER,
-    SUMMER,
     ZODIAC_SINGS,
     COORD_CALENDAR_CENTER,
     COORD_CALENDAR_LEFT,
@@ -79,21 +79,13 @@ COORDS = {
 class CreateImage:
     def __init__(self):
         self.calendar = Image.new("RGB", IMG_RESOLUTION)
-        if MONTH in WINTER:
-            backgrounds = list(Path(BACKGROUNDS_DIR + "/winter").glob("*.*"))
-        else:
-            backgrounds = list(Path(BACKGROUNDS_DIR).glob("*.*"))
-        self.random_background = random.choice(backgrounds)
+        self.random_background = random.choice(list(Path(BACKGROUNDS_DIR + "/winter").glob("*.*")) if MONTH in WINTER else list(Path(BACKGROUNDS_DIR).glob("*.*")))
         self.random_phrase = random.choice(list(Path(PHRASE_DIR).glob("*.*")))
         self.random_calendar = random.choice(
             list(Path(CALENDAR_DIR).glob(f"*{MONTHS[MONTH - 1]}*.*"))
         )
 
     def get_background(self):
-        if MONTH in WINTER:
-            return Image.open(self.random_background)
-        if MONTH in SUMMER:
-            return Image.open(self.random_background)
         return Image.open(self.random_background)
 
     def get_phrase(self):
@@ -112,12 +104,8 @@ class CreateImage:
     def get_random_quote(self):
         try:
             with open(QUOTES_FILE_DIR, "r") as file:
-                line = next(file)
-                for num, quote in enumerate(file, 2):
-                    if random.randrange(num):
-                        continue
-                    line = quote
-                return line.strip()
+                quotes = file.readlines()
+                return random.choice(quotes).strip()
         except StopIteration:
             return None
 
@@ -245,9 +233,12 @@ class CreateImage:
 
 
 if __name__ == "__main__":
-    a = CreateImage()
-    # a.create_temp_image()
-    a.make_wallpaper_v2(0, "leo")
+    for i in range(10):
+        CreateImage().make_wallpaper_v2(0, "leo")
+        time.sleep(5)
+    # a = CreateImage()
+    # # a.create_temp_image()
+    # a.make_wallpaper_v2(0, "leo")
     # text_list = [
     #     "Ох, уж, эти Водолеи. Весь месяц в кураже и",
     #     "внимании. Как же не упустить из виду нечто",

@@ -34,12 +34,11 @@ async def create_user(user: User):
 
 @img_router.put("/users/{tg_id}/zodiac")
 async def update_user_zodiac(tg_id: int, zodiac: Zodiac):
-    result = users.update_one({"tg_id": tg_id}, {"$set": {"zodiac": zodiac.zodiac}})
-    return (
-        {"result": "Zodiac updated"}
-        if result.modified_count
-        else {"result": "User not found"}
-    )
+    result = users.update_one({"tg_id": tg_id}, {"$set": {"zodiac": zodiac.zodiac}}, upsert=False)
+    if result.matched_count > 0:
+        return {"result": "Zodiac updated"}
+    else:
+        return {"result": "User not found"}
 
 
 @img_router.put("/users/{tg_id}/is_subscriber")
@@ -47,7 +46,7 @@ async def update_user_is_subscriber(tg_id: int, is_subscriber: bool):
     """
     Обновление статуса подписки пользователя
     """
-    result = users.update_one(
+    result = await users.update_one(
         {"tg_id": tg_id}, {"$set": {"is_subscriber": is_subscriber}}
     )
     return (

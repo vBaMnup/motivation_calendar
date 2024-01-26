@@ -14,6 +14,7 @@ class User(BaseModel):
     class Config:
         arm_mode = True
         schema_extra = {"required": ["tg_id", "username"]}
+        indexes = [{"fields": ["tg_id"], "unique": True}]
 
 
 class Zodiac(BaseModel):
