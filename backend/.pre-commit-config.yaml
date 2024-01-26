@@ -2,9 +2,15 @@ repos:
   - repo: local
     hooks:
       # Run the formatter.
-      - id: ruff-format
+      - id: ruff-fix
         name: ruff
         entry: ruff --fix
+        language: system
+        types: [ python ]
+
+      - id: ruff-format
+        name: ruff
+        entry: ruff format
         language: system
         types: [ python ]
 
