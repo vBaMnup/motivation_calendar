@@ -1,6 +1,7 @@
 FROM python:3.10-slim
 
 WORKDIR /calendar_backend
+RUN mkdir img
 
 COPY requirements.txt .
 

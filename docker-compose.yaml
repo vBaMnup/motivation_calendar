@@ -2,10 +2,11 @@ version: '3.8'
 
 services:
   mongo_db:
-    image: mongo:6.0.4-jammy
+    image: mongo:6.0.13-jammy
     restart: always
     volumes:
-      - ./db:/data/db
+      - mongodb:/data/db
+      - mongoconfig:/data/configdb
     env_file:
       - backend/settings/.env
 
@@ -15,8 +16,7 @@ services:
     ports:
      - "8000:8000"
     volumes:
-      - ./img:/img
-      - ./templates:/templates
+      - backend:/calendar_backend
     depends_on:
       - mongo_db
     env_file:
@@ -29,3 +29,11 @@ services:
   #    - "6379:6379"
   #   depends_on:
   #     - web
+
+volumes:
+  # default dir on Ubuntu: /var/lib/docker/volumes
+  mongodb:
+  mongoconfig:
+  backend:
+#  img:
+#  templates:
