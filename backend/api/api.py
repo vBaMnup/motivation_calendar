@@ -119,7 +119,7 @@ async def get_all_users():
     Получение всех зарегистрированных пользователей
     """
     all_users = list(users.find({}, {"_id": 0}))
-    return 1  # {"users": all_users}
+    return {"users": all_users}
 
 
 @img_router.get("/get_all_subscriber")

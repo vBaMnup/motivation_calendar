@@ -2,7 +2,6 @@ import os
 import random
 from datetime import datetime
 from pathlib import Path
-from random import choice
 from typing import List
 
 from PIL import Image, ImageDraw, ImageFont
@@ -26,8 +25,8 @@ from settings.config import (
     IMG_QUALITY,
     IMG_RESOLUTION,
     PHRASE_DIR,
-    SUMMER,
     WINTER,
+    SUMMER,
     ZODIAC_SINGS,
     COORD_CALENDAR_CENTER,
     COORD_CALENDAR_LEFT,
@@ -91,16 +90,24 @@ class CreateImage:
         )
 
     def get_background(self):
-        return self.random_background
+        if MONTH in WINTER:
+            return Image.open(self.random_background)
+        if MONTH in SUMMER:
+            return Image.open(self.random_background)
+        return Image.open(self.random_background)
 
     def get_phrase(self):
-        return self.create_temp_image()
+        return Image.open(self.random_phrase)
 
     def get_calendar(self):
-        return self.random_calendar
+        return Image.open(self.random_calendar)
 
     def get_position(self):
-        return self.random_background.stem
+        if "left" in self.random_background.name:
+            return "left"
+        if "right" in self.random_background.name:
+            return "right"
+        return "center"
 
     def get_random_quote(self):
         try:
@@ -118,11 +125,8 @@ class CreateImage:
         self, text_lines: List[str] = None, zodiac: str = None
     ) -> Image:
         text_color = (255, 255, 255)
-        outline_color = (0, 0, 0)
-        outline_width = 20
         if zodiac:
-            zodiac = get_key_by_dict(ZODIAC_SINGS, zodiac)
-            print(zodiac)
+            zodiac = get_key_by_dict(ZODIAC_SINGS, zodiac.title())
             zodiac_img = Image.open(f"{HOROSCOPE_IMG_DIR}{zodiac}.png").convert("RGBA")
 
             new_width = 130
@@ -205,6 +209,7 @@ class CreateImage:
         if input_zodiac:
             zodiac = ZODIAC_SINGS[input_zodiac].lower()
             text_horo = get_text_from_json(zodiac)
+
             zodiac_img = self.create_temp_image(
                 make_strings_from_text(text_horo), zodiac
             )
@@ -238,54 +243,13 @@ class CreateImage:
         self.calendar.save(wallpaper_path, quality=IMG_QUALITY)
         return wallpaper_path
 
-    def make_wallpaper(self, tg_id, input_zodiac=None):
-        phrase_img = self.get_phrase()
-        calendar_img = self.get_calendar()
-        self.calendar.paste(self.get_background())
-
-        if input_zodiac:
-            zodiac = ZODIAC_SINGS[input_zodiac].lower()
-            zodiac_img = Image.open(f"{HOROSCOPE_IMG_DIR}{zodiac}.png")
-            if "left" in self.random_background.name:
-                self.calendar.paste(phrase_img, COORD_PHRASE_LEFT_WITH_HORO, phrase_img)
-                self.calendar.paste(
-                    calendar_img, COORD_CALENDAR_LEFT_WITH_HORO, calendar_img
-                )
-                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_LEFT, zodiac_img)
-            elif "right" in self.random_background.name:
-                self.calendar.paste(
-                    phrase_img, COORD_PHRASE_RIGHT_WITH_HORO, phrase_img
-                )
-                self.calendar.paste(
-                    calendar_img, COORD_CALENDAR_RIGHT_WITH_HORO, calendar_img
-                )
-                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_RIGHT, zodiac_img)
-            else:
-                self.calendar.paste(phrase_img, COORD_PHRASE_CENTER, phrase_img)
-                self.calendar.paste(calendar_img, COORD_CALENDAR_CENTER, calendar_img)
-                self.calendar.paste(zodiac_img, COORD_HOROSCOPE_CENTER, zodiac_img)
-        else:
-            if "left" in self.random_background.name:
-                self.calendar.paste(phrase_img, COORD_PHRASE_LEFT, phrase_img)
-                self.calendar.paste(calendar_img, COORD_CALENDAR_CENTER, calendar_img)
-            elif "right" in self.random_background.name:
-                self.calendar.paste(phrase_img, COORD_PHRASE_RIGHT, phrase_img)
-                self.calendar.paste(calendar_img, COORD_CALENDAR_RIGHT, calendar_img)
-            else:
-                self.calendar.paste(phrase_img, COORD_PHRASE_CENTER, phrase_img)
-                self.calendar.paste(calendar_img, COORD_CALENDAR_CENTER, calendar_img)
-
-        wallpaper_path = os.path.abspath(f"img/{tg_id}.png")
-        self.calendar.save(wallpaper_path, quality=IMG_QUALITY)
-        return wallpaper_path
-
 
 if __name__ == "__main__":
     a = CreateImage()
     # a.create_temp_image()
-    # a.make_wallpaper_v2(1, "leo")
-    text_list = [
-        "Ох, уж, эти Водолеи. Весь месяц в кураже и",
-        "внимании. Как же не упустить из виду нечто",
-    ]
-    a.create_temp_image(text_list, "aquarius")
+    a.make_wallpaper_v2(0, "leo")
+    # text_list = [
+    #     "Ох, уж, эти Водолеи. Весь месяц в кураже и",
+    #     "внимании. Как же не упустить из виду нечто",
+    # ]
+    # a.create_temp_image(text_list, "aquarius")
