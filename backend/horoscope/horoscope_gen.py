@@ -6,7 +6,7 @@ from xml.etree import ElementTree
 import aiofiles
 from aiohttp import ClientSession
 
-from settings.config import DAILY_HOROSCOPE_DIR, MONTHLY_HOROSCOPE_DIR, ZODIAC_SINGS
+from settings.config import DAILY_HOROSCOPE_DIR, MONTHLY_HOROSCOPE_DIR, ZODIAC_SIGNS
 
 NOW_MONTH = datetime.now().month
 
@@ -15,7 +15,7 @@ async def get_horoscope(sign: str) -> dict | str:
     async with aiofiles.open(f"{MONTHLY_HOROSCOPE_DIR}{NOW_MONTH}.json", "r") as file:
         zodiac_info = json.load(await file.read())
 
-    ru_sign = ZODIAC_SINGS.get(sign)
+    ru_sign = ZODIAC_SIGNS.get(sign)
 
     if ru_sign in zodiac_info:
         return dict(zodiac_info[ru_sign])

@@ -1,44 +1,33 @@
-import os
+import asyncio
 import random
-import time
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import List
+from typing import List, Optional, Tuple, Dict
 
 from PIL import Image, ImageDraw, ImageFont
+
+# Импорт вспомогательных функций и настроек
 from pictures.string_split import (
     get_text_from_json,
     make_strings_from_text,
-    get_key_by_dict,
 )
-
 from settings.config import (
     BACKGROUNDS_DIR,
     CALENDAR_DIR,
-    COORD_CALENDAR_LEFT_WITH_HORO,
-    COORD_CALENDAR_RIGHT_WITH_HORO,
-    COORD_HOROSCOPE_CENTER,
-    COORD_HOROSCOPE_LEFT,
-    COORD_HOROSCOPE_RIGHT,
-    COORD_PHRASE_LEFT_WITH_HORO,
-    COORD_PHRASE_RIGHT_WITH_HORO,
+    COORD_MAP,
     HOROSCOPE_IMG_DIR,
-    IMG_QUALITY,
     IMG_RESOLUTION,
     PHRASE_DIR,
     WINTER,
-    ZODIAC_SINGS,
-    COORD_CALENDAR_CENTER,
-    COORD_CALENDAR_LEFT,
-    COORD_CALENDAR_RIGHT,
-    COORD_PHRASE_CENTER,
-    COORD_PHRASE_LEFT,
-    COORD_PHRASE_RIGHT,
+    ZODIAC_SIGNS,
     FONTS_DIR,
-    QUOTES_FILE_DIR,
+    TEXT_SHADOW_OFFSET,
+    FONT_SIZE_REGULAR,
+    FONT_SIZE_SMALL,
+    LINE_SPACING,
 )
 
-MONTH = datetime.today().month
 MONTHS = [
     "january",
     "february",
@@ -53,193 +42,220 @@ MONTHS = [
     "november",
     "december",
 ]
-COORDS = {
-    "left": {
-        "phrase": COORD_PHRASE_LEFT,
-        "calendar": COORD_CALENDAR_LEFT,
-        "phrase_with_horo": COORD_PHRASE_LEFT_WITH_HORO,
-        "calendar_with_horo": COORD_CALENDAR_LEFT_WITH_HORO,
-        "zodiac": COORD_HOROSCOPE_LEFT,
-    },
-    "right": {
-        "phrase": COORD_PHRASE_RIGHT,
-        "calendar": COORD_CALENDAR_RIGHT,
-        "phrase_with_horo": COORD_PHRASE_RIGHT_WITH_HORO,
-        "calendar_with_horo": COORD_CALENDAR_RIGHT_WITH_HORO,
-        "zodiac": COORD_HOROSCOPE_RIGHT,
-    },
-    "center": {
-        "phrase": COORD_PHRASE_CENTER,
-        "calendar": COORD_CALENDAR_CENTER,
-        "zodiac": COORD_HOROSCOPE_CENTER,
-    },
-}
 
 
-class CreateImage:
+class ImageCache:
+    """Класс для кэширования путей к файлам изображений"""
+
+    _instance = None
+    _backgrounds: Dict[str, List[Path]] = {}
+    _phrases: List[Path] = []
+    _calendars: Dict[str, List[Path]] = {}
+
+    def __new__(cls):
+        if not cls._instance:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    @classmethod
+    async def initialize(cls):
+        cls._phrases = list(Path(PHRASE_DIR).glob("*.*"))
+        await cls._load_backgrounds()
+        await cls._load_calendars()
+
+    @classmethod
+    async def _load_backgrounds(cls):
+        for month in range(1, 13):
+            key = "winter" if month in WINTER else "default"
+            if key not in cls._backgrounds:
+                path = Path(BACKGROUNDS_DIR) / ("winter" if key == "winter" else "")
+                cls._backgrounds[key] = list(path.glob("*.*"))
+
+    @classmethod
+    async def _load_calendars(cls):
+        for month in range(1, 13):
+            month_name = MONTHS[month - 1]
+            if month_name not in cls._calendars:
+                cls._calendars[month_name] = list(
+                    Path(CALENDAR_DIR).glob(f"*{month_name}*.*")
+                )
+
+    @classmethod
+    def get_backgrounds(cls, month: int) -> List[Path]:
+        key = "winter" if month in WINTER else "default"
+        return cls._backgrounds.get(key, [])
+
+    @classmethod
+    def get_phrases(cls) -> List[Path]:
+        return cls._phrases
+
+    @classmethod
+    def get_calendars(cls, month: int) -> List[Path]:
+        return cls._calendars.get(MONTHS[month - 1], [])
+
+
+class AsyncImageProcessor:
+    """Обработчик изображений с асинхронным API"""
+
+    _executor = ThreadPoolExecutor()
+    _font_cache: Dict[Tuple[str, int], ImageFont.FreeTypeFont] = {}
+
+    @classmethod
+    async def open_image(cls, path: Path) -> Image.Image:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(cls._executor, Image.open, path)
+
+    @classmethod
+    async def load_font(cls, font_path: str, size: int) -> ImageFont.FreeTypeFont:
+        key = (font_path, size)
+        if key not in cls._font_cache:
+            loop = asyncio.get_event_loop()
+            font = await loop.run_in_executor(
+                cls._executor, ImageFont.truetype, font_path, size
+            )
+            cls._font_cache[key] = font
+        return cls._font_cache[key]
+
+    @classmethod
+    async def draw_text_with_shadow(
+        cls,
+        draw: ImageDraw.Draw,
+        position: Tuple[int, int],
+        text: str,
+        font: ImageFont.FreeTypeFont,
+        color: Tuple[int, int, int] = (255, 255, 255),
+        shadow_color: Tuple[int, int, int] = (0, 0, 0),
+        anchor: str = "ma",
+    ) -> None:
+        x, y = position
+        draw.text(
+            (x - TEXT_SHADOW_OFFSET, y), text, shadow_color, font=font, anchor=anchor
+        )
+        draw.text((x, y), text, color, font=font, anchor=anchor)
+
+
+class WallpaperCreator:
+    """Основной класс для создания обоев"""
+
     def __init__(self):
-        self.calendar = Image.new("RGB", IMG_RESOLUTION)
-        self.random_background = random.choice(
-            list(Path(BACKGROUNDS_DIR + "/winter").glob("*.*"))
-            if MONTH in WINTER
-            else list(Path(BACKGROUNDS_DIR).glob("*.*"))
+        self.month = datetime.today().month
+        self._init_paths()
+        self.calendar_image = Image.new("RGB", IMG_RESOLUTION)
+
+    def _init_paths(self):
+        self.background_path = random.choice(ImageCache.get_backgrounds(self.month))
+        self.phrase_path = random.choice(ImageCache.get_phrases())
+        self.calendar_path = random.choice(ImageCache.get_calendars(self.month))
+
+    @property
+    def position(self) -> str:
+        name = self.background_path.name.lower()
+        return next((p for p in ["left", "right", "center"] if p in name), "center")
+
+    async def _create_zodiac_image(
+        self, text_lines: List[str], zodiac: str
+    ) -> Image.Image:
+        # zodiac_key = ZODIAC_SIGNS.get(zodiac.lower())
+        zodiac_img = await AsyncImageProcessor.open_image(
+            Path(HOROSCOPE_IMG_DIR) / f"{zodiac}.png"
         )
-        self.random_phrase = random.choice(list(Path(PHRASE_DIR).glob("*.*")))
-        self.random_calendar = random.choice(
-            list(Path(CALENDAR_DIR).glob(f"*{MONTHS[MONTH - 1]}*.*"))
+        zodiac_img = zodiac_img.resize((130, 100)).convert("RGBA")
+
+        base_image = Image.new("RGBA", (815, 240))
+        base_image.paste(zodiac_img, ((815 - 130) // 2, 20))
+
+        draw = ImageDraw.Draw(base_image)
+        font = await AsyncImageProcessor.load_font(
+            str(Path(FONTS_DIR) / "you20133.ttf"), FONT_SIZE_SMALL
         )
 
-    def get_background(self):
-        return Image.open(self.random_background)
-
-    def get_phrase(self):
-        return Image.open(self.random_phrase)
-
-    def get_calendar(self):
-        return Image.open(self.random_calendar)
-
-    def get_position(self):
-        if "left" in self.random_background.name:
-            return "left"
-        if "right" in self.random_background.name:
-            return "right"
-        return "center"
-
-    def get_random_quote(self):
-        try:
-            with open(QUOTES_FILE_DIR, "r") as file:
-                quotes = file.readlines()
-                return random.choice(quotes).strip()
-        except StopIteration:
-            return None
-
-    def create_temp_image(
-        self, text_lines: List[str] = None, zodiac: str = None
-    ) -> Image:
-        text_color = (255, 255, 255)
-        if zodiac:
-            zodiac = get_key_by_dict(ZODIAC_SINGS, zodiac.title())
-            zodiac_img = Image.open(f"{HOROSCOPE_IMG_DIR}{zodiac}.png").convert("RGBA")
-
-            new_width = 130
-            new_height = 100
-            font_size = 35
-
-            zodiac_img = zodiac_img.resize((new_width, new_height))
-
-            width = 815
-            height = 240
-            new_img = Image.new("RGBA", (width, height))
-
-            x_offset = (width - new_width) // 2
-            y_offset = height // 2 - new_height
-            new_img.paste(zodiac_img, (x_offset, y_offset))
-
-            draw = ImageDraw.Draw(new_img)
-
-            font = ImageFont.truetype(f"{FONTS_DIR}you20133.ttf", size=font_size)
-
-            line_spacing = 5
-
-            y_offset = 110
-            for text in text_lines:
-                text_width, text_height = draw.textsize(text, font=font)
-                draw.text(
-                    (width / 2 - 2, y_offset + text_height / 2),
-                    text=text,
-                    fill=(0, 0, 0),
-                    font=font,
-                    anchor="ma",
-                )
-                draw.text(
-                    (width / 2, y_offset + text_height / 2),
-                    text=text,
-                    fill=text_color,
-                    font=font,
-                    anchor="ma",
-                )
-                y_offset += font_size + line_spacing
-
-            return new_img
-        font_size = 40
-        line_spacing = 5
-        text_lines = make_strings_from_text(self.get_random_quote())
-        width = len(max(text_lines, key=len)) * 22
-        height = len(text_lines) * (font_size + line_spacing * 2) + 16
-        new_img = Image.new("RGBA", (width, height))
-        font = ImageFont.truetype(f"{FONTS_DIR}you20133.ttf", size=font_size)
-        y_offset = 0
-        draw = ImageDraw.Draw(new_img)
-
+        y_offset = 110
         for text in text_lines:
-            text_width, text_height = draw.textsize(text, font=font)
-            draw.text(
-                (width / 2 - 2, y_offset + text_height / 2),
-                text=text,
-                fill=(0, 0, 0),
-                font=font,
-                anchor="ma",
+            await AsyncImageProcessor.draw_text_with_shadow(
+                draw, (407, y_offset), text, font
             )
-            draw.text(
-                (width / 2, y_offset + text_height / 2),
-                text=text,
-                fill=text_color,
-                font=font,
-                anchor="ma",
+            y_offset += FONT_SIZE_SMALL + LINE_SPACING
+
+        return base_image
+
+    async def _create_quote_image(self, text_lines: List[str]) -> Image.Image:
+        max_line_length = max(len(line) for line in text_lines) if text_lines else 0
+        width = max_line_length * 22
+        height = len(text_lines) * (FONT_SIZE_REGULAR + LINE_SPACING) + 16
+
+        base_image = Image.new("RGBA", (width, height))
+        draw = ImageDraw.Draw(base_image)
+        font = await AsyncImageProcessor.load_font(
+            str(Path(FONTS_DIR) / "you20133.ttf"), FONT_SIZE_REGULAR
+        )
+
+        y_offset = 0
+        for text in text_lines:
+            await AsyncImageProcessor.draw_text_with_shadow(
+                draw, (width // 2, y_offset + FONT_SIZE_REGULAR // 2), text, font
             )
-            y_offset += font_size + line_spacing
+            y_offset += FONT_SIZE_REGULAR + LINE_SPACING
 
-        return new_img
+        return base_image
 
-    def make_wallpaper_v2(self, tg_id, input_zodiac=None):
-        phrase_img = self.get_phrase()
-        calendar_img = self.get_calendar()
-        self.calendar.paste(self.get_background())
-        position = self.get_position()
-        coords = COORDS[position]
+    async def create_text_image(
+        self, text_lines: Optional[List[str]] = None, zodiac: Optional[str] = None
+    ) -> Image.Image:
+        if zodiac:
+            return await self._create_zodiac_image(text_lines or [], zodiac)
+        return await self._create_quote_image(text_lines or [])
 
-        if input_zodiac:
-            zodiac = ZODIAC_SINGS[input_zodiac].lower()
-            text_horo = get_text_from_json(zodiac)
+    async def generate_wallpaper(
+        self, user_id: int, zodiac: Optional[str] = None
+    ) -> Path:
+        background, phrase_img, calendar_img = await asyncio.gather(
+            AsyncImageProcessor.open_image(self.background_path),
+            AsyncImageProcessor.open_image(self.phrase_path),
+            AsyncImageProcessor.open_image(self.calendar_path),
+        )
 
-            zodiac_img = self.create_temp_image(
-                make_strings_from_text(text_horo), zodiac
+        self.calendar_image.paste(background)
+        coords = COORD_MAP[self.position]
+
+        if zodiac:
+            text = get_text_from_json(ZODIAC_SIGNS[zodiac].lower())
+            horo_img = await self.create_text_image(
+                make_strings_from_text(text), zodiac
             )
-
-            width, height = phrase_img.size
-            coords_center = ((940 - width) // 2, 400 - (height // 2))
-            coords_right = ((950 - width) // 2, 540)
-            coords_left = (((950 - width) // 2) + 950, 540)
-
-            if position == "center":
-                self.calendar.paste(phrase_img, coords_center, phrase_img)
-                self.calendar.paste(calendar_img, coords["calendar"], calendar_img)
-                self.calendar.paste(zodiac_img, coords["zodiac"], zodiac_img)
-            elif position == "right":
-                self.calendar.paste(phrase_img, coords_right, phrase_img)
-                self.calendar.paste(
-                    calendar_img, coords["calendar_with_horo"], calendar_img
-                )
-                self.calendar.paste(zodiac_img, coords["zodiac"], zodiac_img)
-            else:
-                self.calendar.paste(phrase_img, coords_left, phrase_img)
-                self.calendar.paste(
-                    calendar_img, coords["calendar_with_horo"], calendar_img
-                )
-                self.calendar.paste(zodiac_img, coords["zodiac"], zodiac_img)
+            components = [
+                (phrase_img, coords["phrase"]),
+                (calendar_img, coords["calendar"]),
+                (horo_img, coords["zodiac"]),
+            ]
         else:
-            self.calendar.paste(phrase_img, coords["phrase"], phrase_img)
-            self.calendar.paste(calendar_img, coords["calendar"], calendar_img)
+            components = [
+                (phrase_img, coords["phrase"]),
+                (calendar_img, coords["calendar"]),
+            ]
 
-        wallpaper_path = os.path.abspath(f"img/{tg_id}.png")
-        self.calendar.save(wallpaper_path, quality=IMG_QUALITY)
-        return wallpaper_path
+        for img, coord in components:
+            self.calendar_image.paste(img, coord, img)
+
+        output_path = Path("img") / f"{user_id}.png"
+        await asyncio.get_event_loop().run_in_executor(
+            AsyncImageProcessor._executor,
+            self.calendar_image.save,
+            output_path,
+            # quality=IMG_QUALITY
+        )
+        return output_path
+
+
+async def main():
+    await ImageCache.initialize()
+    tasks = [WallpaperCreator().generate_wallpaper(i, "leo") for i in range(10)]
+    results = await asyncio.gather(*tasks)
+    print(f"Generated wallpapers: {[str(p) for p in results]}")
 
 
 if __name__ == "__main__":
-    for i in range(10):
-        CreateImage().make_wallpaper_v2(0, "leo")
-        time.sleep(5)
+    asyncio.run(main())
+
     # a = CreateImage()
     # # a.create_temp_image()
     # a.make_wallpaper_v2(0, "leo")

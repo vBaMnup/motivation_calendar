@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 
 from daily_motivation.motivation_quote_creater import get_random_quote
 from horoscope.horoscope_gen import get_horoscope, get_today_horoscope
-from pictures.pic_maker import CreateImage
+from pictures.pic_maker import WallpaperCreator, ImageCache
 from .models import users
 from .schema import User, Zodiac
 
@@ -177,12 +177,17 @@ async def get_calendar(tg_id: int, zodiac: Zodiac = None):
 
     users.update_one({"tg_id": tg_id}, {"$inc": {"count_request_calendar": 1}})
 
-    if zodiac:
+    await ImageCache.initialize()
+
+    if not zodiac:
         return FileResponse(
-            CreateImage().make_wallpaper_v2(tg_id, user_data.get("zodiac")),
-            media_type="image/jpeg",
+            await WallpaperCreator().generate_wallpaper(tg_id), media_type="image/jpeg"
         )
-    return FileResponse(CreateImage().make_wallpaper_v2(tg_id), media_type="image/jpeg")
+
+    return FileResponse(
+        await WallpaperCreator().generate_wallpaper(tg_id, user_data.get("zodiac")),
+        media_type="image/jpeg",
+    )
 
 
 @img_router.post("/monthly_horoscope/")
