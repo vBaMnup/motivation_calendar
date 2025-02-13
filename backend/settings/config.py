@@ -25,17 +25,17 @@ DAILY_HOROSCOPE_DIR: str = ROOT_DIR + TEMPLATES_DIR + "daily_horoscope/"
 
 
 # Координаты для календаря и цитат
-COORD_PHRASE_CENTER: tuple = (0, 350)
+COORD_PHRASE_CENTER: tuple = (40, 350)
 COORD_CALENDAR_CENTER: tuple = (1030, 175)
 COORD_HOROSCOPE_CENTER: tuple = (553, 800)
 
-COORD_PHRASE_LEFT: tuple = (900, 650)
+COORD_PHRASE_LEFT: tuple = (1035, 650)
 COORD_CALENDAR_LEFT: tuple = (1015, 100)
 COORD_HOROSCOPE_LEFT: tuple = (1005, 790)
 COORD_CALENDAR_LEFT_WITH_HORO = (1020, 45)
 COORD_PHRASE_LEFT_WITH_HORO: tuple = (0, 590)
 
-COORD_PHRASE_RIGHT: tuple = (80, 655)
+COORD_PHRASE_RIGHT: tuple = (110, 655)
 COORD_CALENDAR_RIGHT: tuple = (90, 95)
 COORD_CALENDAR_RIGHT_WITH_HORO = (60, 45)
 COORD_HOROSCOPE_RIGHT: tuple = (45, 790)
@@ -50,8 +50,8 @@ IMG_QUALITY: int = 90
 IMG_RESOLUTION: tuple = (1920, 1080)
 
 # MongoDB
-# MONGO_CLIENT = MongoClient("mongodb://127.0.0.1:27017/")
-MONGO_CLIENT = MongoClient("mongodb://mongo_db:27017/")  # server
+MONGO_CLIENT = MongoClient("mongodb://127.0.0.1:27017/")
+# MONGO_CLIENT = MongoClient("mongodb://mongo_db:27017/")  # server
 
 
 # Знаки зодиака
